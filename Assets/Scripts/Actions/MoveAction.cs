@@ -1,20 +1,15 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using TMPro;
 using UnityEngine;
 
-public class MoveAction : MonoBehaviour
+public class MoveAction : BaseAction
 {
 
     [SerializeField] Animator unitAnimator;
     [SerializeField] int maxMovementRange;
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        targetPosition = transform.position;
-    }
 
     // 이동 관련 변수들
     Vector3 targetPosition;
@@ -22,9 +17,19 @@ public class MoveAction : MonoBehaviour
     const float ROTATE_SPEED = 15f;
     const float STOPPING_DISTANCE = .1f;
 
+
+    protected override void Awake()
+    {
+        base.Awake();
+        targetPosition = transform.position;
+    }
     // Update is called once per frame
     void Update()
     {
+        if(isActive == false)
+        {
+            return;
+        }
 
         if (Vector3.Distance(transform.position, targetPosition) > STOPPING_DISTANCE)
         {
@@ -37,12 +42,16 @@ public class MoveAction : MonoBehaviour
         else
         {
             unitAnimator.SetBool("IsWalking", false);
+            isActive = false;
+            onActionComplete();
         }
     }
 
-    public void Move(GridPosition targetPosition)
+    public void Move(GridPosition targetPosition , Action onActionComplete)
     {
         this.targetPosition = LevelGrid.Instance.GetWorldPosition(targetPosition);
+        isActive = true;
+        this.onActionComplete = onActionComplete;
     }
 
     public bool IsValidActionGridPosition(GridPosition gridPosition)

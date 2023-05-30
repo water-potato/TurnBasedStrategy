@@ -36,6 +36,16 @@ public class GridSystem
         return new GridPosition(Mathf.RoundToInt(worldPosition.x / cellSize), Mathf.RoundToInt(worldPosition.z / cellSize));
     }
 
+    public int GetWidth()
+    {
+        return width;
+    }
+
+    public int GetHeight()
+    {
+        return height;
+    }
+
     public GridObject GetGridObject(GridPosition gridPosition)
     {
         return gridObjects[gridPosition.x, gridPosition.z];

@@ -18,7 +18,7 @@ public class Unit : MonoBehaviour
         GridPosition newGridPosition = LevelGrid.Instance.GetGridPosition(transform.position);
         if (newGridPosition != gridPosition)
         {
-            LevelGrid.Instance.UnitMoverGridPosition(gridPosition, newGridPosition, this);
+            LevelGrid.Instance.UnitMovedGridPosition(gridPosition, newGridPosition, this);
             gridPosition = newGridPosition;
         }
 
@@ -28,5 +28,8 @@ public class Unit : MonoBehaviour
     {
         return GetComponent<MoveAction>();
     }
-
+    public SpinAction GetSpinAction()
+    {
+        return GetComponent<SpinAction>();
+    }
 }
