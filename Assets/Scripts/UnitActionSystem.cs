@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using UnityEngine.EventSystems;
 public class UnitActionSystem : MonoBehaviour
 {
     public static UnitActionSystem Instance { get; private set; }
@@ -10,6 +10,8 @@ public class UnitActionSystem : MonoBehaviour
 
     [SerializeField] private Unit selectedUnit;
     [SerializeField] LayerMask unitLayerMask = 1 << 7;
+
+    private BaseAction selectedAction;
 
     private bool isBusy;
 
@@ -24,33 +26,38 @@ public class UnitActionSystem : MonoBehaviour
         }
         Instance = this;
     }
-    // Update is called once per frame
+
+    public void Start()
+    {
+        SetSelectedUnit(selectedUnit);
+    }
     void Update()
     {
-
-        if (isBusy == true)
+        if (isBusy == true) // 행동 중이면
             return;
+
+        if (EventSystem.current.IsPointerOverGameObject()) // 마우스가 UI 위에 있으면
+            return;
+
+        if (HandleUnitSelection() == true) // 유닛을 골랐으면
+        {
+            return;
+        }
+        HandleSecetedAction();
+    }
+
+
+    private void HandleSecetedAction()
+    {
 
         if (Input.GetMouseButtonDown(0))
         {
-            if (HandleUnitSelection() == true)
-            {
-                return;
-            }
-
             GridPosition mouseGridPosition = LevelGrid.Instance.GetGridPosition(MouseWorld.GetMousePoisiion());
-
-            if (selectedUnit.GetMoveAction().IsValidActionGridPosition(mouseGridPosition))
+            if (selectedAction.IsValidActionGridPosition(mouseGridPosition))
             {
-                selectedUnit.GetMoveAction().Move(mouseGridPosition , EndBusy);
+                selectedAction.TakeAction(mouseGridPosition, EndBusy);
                 SetBusy();
             }
-        }
-
-        if (Input.GetMouseButtonDown(1))
-        {
-            selectedUnit.GetSpinAction().Spin(EndBusy);
-            SetBusy();
         }
     }
 
@@ -67,24 +74,44 @@ public class UnitActionSystem : MonoBehaviour
 
     private bool HandleUnitSelection()
     {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hit, float.MaxValue, unitLayerMask) == true)
+        if (Input.GetMouseButtonDown(0))
         {
-            if (hit.transform.TryGetComponent<Unit>(out selectedUnit) == false)
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit, float.MaxValue, unitLayerMask) == true)
             {
-                Debug.Log("Failed to Get Unit");
+                if (hit.transform.TryGetComponent<Unit>(out Unit unit) == true)
+                {
+                    if(unit == selectedUnit)
+                    {
+                        //같은 유닛을 고름
+                        return false;
+                    }
+                    SetSelectedUnit(unit);
+                    return true;
+                }
+
             }
-            else
-            {
-                OnSelectedUnitChanged?.Invoke(this, EventArgs.Empty);
-                return true;
-            }
-            }
+        }
         return false;
     }
+    private void SetSelectedUnit(Unit unit)
+    {
+        selectedUnit = unit;
+        SetSelectedAction(unit.GetMoveAction());
+        OnSelectedUnitChanged?.Invoke(this, EventArgs.Empty);
+    }
 
+    public void SetSelectedAction(BaseAction baseAction)
+    {
+        selectedAction= baseAction;
+    }
     public Unit GetSelectedUnit()
     {
         return selectedUnit;
+    }
+
+    public BaseAction GetSelectedAction()
+    {
+        return selectedAction;
     }
 }

@@ -24,11 +24,24 @@ public class SpinAction : BaseAction
         }
     }
 
-    public void Spin(Action onActionComplete )
+    public override void TakeAction(GridPosition gridPosition, Action onActionComplete )
     {
         totalSpinAmount = 0f;
         isActive = true;
 
         this.onActionComplete = onActionComplete; 
+    }
+
+
+
+    public override string GetName()
+    {
+        return "Spin";
+    }
+
+    public override List<GridPosition> GetValidGridPositionList()
+    {
+        GridPosition unitGridPosition = unit.GetGridPosition();
+        return new List<GridPosition> { unitGridPosition };
     }
 }

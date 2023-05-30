@@ -5,7 +5,19 @@ using UnityEngine;
 public class Unit : MonoBehaviour
 {
 
-    GridPosition gridPosition;
+    private MoveAction moveAction;
+    private SpinAction spinAction;
+    private BaseAction[] baseActionArray;
+
+    private GridPosition gridPosition;
+
+
+    private void Awake()
+    {
+        moveAction= GetComponent<MoveAction>();
+        spinAction= GetComponent<SpinAction>();
+        baseActionArray = GetComponents<BaseAction>();
+    }
     private void Start()
     {
         gridPosition = LevelGrid.Instance.GetGridPosition(transform.position);
@@ -26,10 +38,20 @@ public class Unit : MonoBehaviour
 
     public MoveAction GetMoveAction()
     {
-        return GetComponent<MoveAction>();
+        return moveAction;
     }
     public SpinAction GetSpinAction()
     {
-        return GetComponent<SpinAction>();
+        return spinAction;
+    }
+
+    public GridPosition GetGridPosition()
+    {
+        return gridPosition;
+    }
+
+    public BaseAction[] GetBaseActionArray()
+    {
+        return baseActionArray;
     }
 }
