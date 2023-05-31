@@ -16,6 +16,7 @@ public class UnitActionSystem : MonoBehaviour
     private bool isBusy;
 
     public event EventHandler OnSelectedUnitChanged;
+    public event EventHandler OnSelectedActionChanged;
     private void Awake()
     {
         if(Instance != null)
@@ -104,6 +105,7 @@ public class UnitActionSystem : MonoBehaviour
     public void SetSelectedAction(BaseAction baseAction)
     {
         selectedAction= baseAction;
+        OnSelectedActionChanged?.Invoke(this, EventArgs.Empty);
     }
     public Unit GetSelectedUnit()
     {
