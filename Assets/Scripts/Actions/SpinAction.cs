@@ -6,6 +6,11 @@ using UnityEngine;
 public class SpinAction : BaseAction
 {
     private float totalSpinAmount;
+
+    private void Start()
+    {
+        actionCost = 2;
+    }
     // Update is called once per frame
     void Update()
     {

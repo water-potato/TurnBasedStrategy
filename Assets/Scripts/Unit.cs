@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Unit : MonoBehaviour
@@ -10,7 +11,7 @@ public class Unit : MonoBehaviour
     private BaseAction[] baseActionArray;
 
     private GridPosition gridPosition;
-
+    private int actionPoints = 2;
 
     private void Awake()
     {
@@ -53,5 +54,25 @@ public class Unit : MonoBehaviour
     public BaseAction[] GetBaseActionArray()
     {
         return baseActionArray;
+    }
+
+    public bool TrySpendActionPoints(BaseAction action)
+    {
+        if (CanSpendActionPoints(action))
+        {
+            actionPoints -= action.GetActionCost();
+            return true;
+        }
+        return false;
+    }
+
+    public bool CanSpendActionPoints(BaseAction action)
+    {
+        return actionPoints >= action.GetActionCost();
+    }
+
+    public int GetActionPoints()
+    {
+        return actionPoints;
     }
 }

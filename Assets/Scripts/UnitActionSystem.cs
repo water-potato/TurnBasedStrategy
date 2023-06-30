@@ -17,6 +17,8 @@ public class UnitActionSystem : MonoBehaviour
 
     public event EventHandler OnSelectedUnitChanged;
     public event EventHandler OnSelectedActionChanged;
+    public event EventHandler<bool> OnBusyChanged;
+    public event EventHandler OnActionStarted;
     private void Awake()
     {
         if(Instance != null)
@@ -54,21 +56,32 @@ public class UnitActionSystem : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             GridPosition mouseGridPosition = LevelGrid.Instance.GetGridPosition(MouseWorld.GetMousePoisiion());
-            if (selectedAction.IsValidActionGridPosition(mouseGridPosition))
+            if (selectedAction.IsValidActionGridPosition(mouseGridPosition) == false)
             {
-                selectedAction.TakeAction(mouseGridPosition, EndBusy);
-                SetBusy();
+                // 유효한 GridPosition이 아님
+                return;
             }
+
+            if (selectedUnit.TrySpendActionPoints(selectedAction) == false)
+            {
+                // actionPoint가 부족함
+                return;
+            }
+            selectedAction.TakeAction(mouseGridPosition, EndBusy);
+            SetBusy();
+            OnActionStarted?.Invoke(this, EventArgs.Empty);
         }
     }
 
     private void SetBusy()
     {
         isBusy = true;
+        OnBusyChanged?.Invoke(this, isBusy);
     }
     private void EndBusy()
     {
         isBusy = false;
+        OnBusyChanged?.Invoke(this, isBusy);
     }
 
    
