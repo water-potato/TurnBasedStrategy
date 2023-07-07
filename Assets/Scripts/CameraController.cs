@@ -16,7 +16,7 @@ public class CameraController : MonoBehaviour
     // มÜ ฐüทร
     CinemachineTransposer transposer;
     Vector3 camFollowOffset;
-    const float ZOOM_SPEED = 20f;
+    const float ZOOM_SPEED = 100f;
     const float MIN_FOLLOW_Y_OFFSET = 2f;
     const float MAX_FOLLOW_Y_OFFSET = 12f;
 

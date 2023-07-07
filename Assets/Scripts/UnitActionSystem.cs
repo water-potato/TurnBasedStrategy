@@ -39,6 +39,9 @@ public class UnitActionSystem : MonoBehaviour
         if (isBusy == true) // 행동 중이면
             return;
 
+        if (TurnSystem.Instance.IsPlayerTurn() == false) // 플레이어 턴이 아니면
+            return;
+
         if (EventSystem.current.IsPointerOverGameObject()) // 마우스가 UI 위에 있으면
             return;
 
@@ -98,6 +101,12 @@ public class UnitActionSystem : MonoBehaviour
                     if(unit == selectedUnit)
                     {
                         //같은 유닛을 고름
+                        return false;
+                    }
+
+                    if(unit.IsEnemy())
+                    {
+                        // 적을 고름
                         return false;
                     }
                     SetSelectedUnit(unit);

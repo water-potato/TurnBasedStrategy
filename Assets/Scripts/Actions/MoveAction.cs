@@ -8,14 +8,17 @@ using UnityEngine;
 public class MoveAction : BaseAction
 {
 
-    [SerializeField] Animator unitAnimator;
     [SerializeField] int maxMovementRange;
 
     // 이동 관련 변수들
     Vector3 targetPosition;
     float movementSpeed = 3f;
-    const float ROTATE_SPEED = 15f;
+    const float ROTATE_SPEED = 50f;
     const float STOPPING_DISTANCE = .1f;
+
+    public event EventHandler OnStartMoving;
+    public event EventHandler OnStopMoving;
+
 
 
     protected override void Awake()
@@ -35,23 +38,22 @@ public class MoveAction : BaseAction
         {
             Vector3 movementVector = (targetPosition - transform.position).normalized;
             transform.position += movementVector * movementSpeed * Time.deltaTime;
-            unitAnimator.SetBool("IsWalking", true);
 
             transform.forward = Vector3.Lerp(transform.forward, movementVector, ROTATE_SPEED * Time.deltaTime);
         }
         else
         {
-            unitAnimator.SetBool("IsWalking", false);
-            isActive = false;
-            onActionComplete();
+            OnStopMoving?.Invoke(this, EventArgs.Empty);
+            ActionComplete();
         }
     }
 
     public override void TakeAction(GridPosition targetPosition , Action onActionComplete)
     {
         this.targetPosition = LevelGrid.Instance.GetWorldPosition(targetPosition);
-        isActive = true;
-        this.onActionComplete = onActionComplete;
+        ActionStart(onActionComplete);
+
+        OnStartMoving?.Invoke(this, EventArgs.Empty);
     }
 
 

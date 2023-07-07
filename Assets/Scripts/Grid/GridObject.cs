@@ -46,4 +46,18 @@ public class GridObject
 
         return objStr;
     }
+
+    public Unit GetUnit()
+    {
+        if (HasAnyUnit())
+        {
+            return unitList[0];
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+     
 }
