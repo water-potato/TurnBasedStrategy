@@ -1,19 +1,28 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class LevelGrid : MonoBehaviour
 {
-    [SerializeField] Transform gridDebugPrefab;
-    GridSystem gridSystem;
-
     public static LevelGrid Instance { get; private set; }
 
+    [SerializeField] private int width;
+    [SerializeField] private int height;
+    [SerializeField] private int cellSize;
 
+
+    [SerializeField] Transform gridDebugPrefab;
+
+    GridSystem<GridObject> gridSystem;
+
+
+    public event EventHandler OnAnyUnitMovedGridPosition;
     void Awake()
     {
-        gridSystem = new GridSystem(10, 10, 2);
-        gridSystem.CreateDebugPrefabs(gridDebugPrefab);
+        gridSystem = new GridSystem<GridObject>(width, height, cellSize, 
+            (GridSystem<GridObject> g , GridPosition gridPosition) => new GridObject(g, gridPosition) );
+        //gridSystem.CreateDebugPrefabs(gridDebugPrefab);
 
         if(Instance != null)
         {
@@ -23,7 +32,10 @@ public class LevelGrid : MonoBehaviour
         }
         Instance = this;
     }
-
+    private void Start()
+    {
+        Pathfinding.Instance.Setup(width , height , cellSize);
+    }
     public void AddUnitAtGridPosition(GridPosition gridPosition , Unit unit)
     {
         gridSystem.GetGridObject(gridPosition).AddUnit(unit);
@@ -38,6 +50,8 @@ public class LevelGrid : MonoBehaviour
     {
         RemoveUnitAtGridPosition(fromGridPosition , unit);
         AddUnitAtGridPosition(toGridPosition , unit);
+
+        OnAnyUnitMovedGridPosition?.Invoke(this, EventArgs.Empty);
     }
 
     public bool HasAnyUnitOnGridPosition(GridPosition gridPosition)
@@ -59,5 +73,16 @@ public class LevelGrid : MonoBehaviour
     public int GetHeight() => gridSystem.GetHeight();
 
     public bool IsValidGridPosition(GridPosition gridPosition) => gridSystem.IsValidGridPosition(gridPosition);
+
+    public IInteractable GetInteractableAtGridPosition(GridPosition gridPosition)
+    {
+        GridObject gridObject = gridSystem.GetGridObject(gridPosition);
+        return gridObject.Interactable;
+    }
+    public void SetInteractableAtGridPosition(GridPosition gridPosition , IInteractable interactable)
+    {
+        GridObject gridObject = gridSystem.GetGridObject(gridPosition);
+        gridObject.Interactable = interactable;
+    }
 }
     

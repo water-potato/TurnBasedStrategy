@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class ShootAction : BaseAction
 {
+    public static event EventHandler<OnShootEventArgs> OnAnyShoot;
     public event EventHandler<OnShootEventArgs> OnShoot;
 
     public class OnShootEventArgs : EventArgs
@@ -19,7 +20,9 @@ public class ShootAction : BaseAction
         Shooting,
         Cooloff,
     }
-    private const float ROTATE_SPEED = 30f;
+
+    [SerializeField] private LayerMask obstacleLayerMask;
+
 
     private State state;
     private int maxShootDistance = 7;
@@ -43,6 +46,7 @@ public class ShootAction : BaseAction
             case State.Aiming:
 
                 Vector3 aimDir = (targetUnit.transform.position - transform.position).normalized;
+                const float ROTATE_SPEED = 30f;
                 transform.forward = Vector3.Lerp(transform.forward, aimDir, ROTATE_SPEED * Time.deltaTime);
                 break;
             case State.Shooting:
@@ -86,6 +90,12 @@ public class ShootAction : BaseAction
 
     private void Shoot()
     {
+        OnAnyShoot?.Invoke(this, new OnShootEventArgs
+        {
+            targetUnit = targetUnit,
+            shootingUnit = unit
+
+        });
         OnShoot?.Invoke(this, new OnShootEventArgs
         {
             targetUnit = targetUnit,
@@ -102,36 +112,40 @@ public class ShootAction : BaseAction
 
     public override List<GridPosition> GetValidGridPositionList()
     {
+        GridPosition unitGridPosition = unit.GetGridPosition();
+        return GetValidGridPositionList(unitGridPosition);
+    }
+    public List<GridPosition> GetValidGridPositionList(GridPosition unitGridPosition)
+    {
         List<GridPosition> validGridPositions = new List<GridPosition>();
 
         for (int z = -maxShootDistance; z <= maxShootDistance; z++)
         {
             for (int x = -maxShootDistance; x <= maxShootDistance; x++)
             {
-                GridPosition unitGridPosition = LevelGrid.Instance.GetGridPosition(transform.position);
-                GridPosition validPosition = new GridPosition(x, z);
+                GridPosition offsetGridPosition = new GridPosition(x, z);
 
-                validPosition += unitGridPosition;
-                if (LevelGrid.Instance.IsValidGridPosition(validPosition) == false)
+                GridPosition testGridPosition = unitGridPosition + offsetGridPosition;
+                if (LevelGrid.Instance.IsValidGridPosition(testGridPosition) == false)
                 {
                     // 그리드 위가 아님
                     continue;
                 }
 
                 int testDistance = Mathf.Abs(x) + Mathf.Abs(z);
-                if(testDistance > maxShootDistance)
+                if (testDistance > maxShootDistance)
                 {
                     continue;
                 }
 
 
-                if (LevelGrid.Instance.HasAnyUnitOnGridPosition(validPosition) == false)
+                if (LevelGrid.Instance.HasAnyUnitOnGridPosition(testGridPosition) == false)
                 {
                     // 해당 위치에 적이 없음
                     continue;
                 }
 
-                Unit targetUnit = LevelGrid.Instance.GetUnitAtGridPosition(validPosition);
+                Unit targetUnit = LevelGrid.Instance.GetUnitAtGridPosition(testGridPosition);
 
                 if (targetUnit.IsEnemy() == unit.IsEnemy())
                 {
@@ -139,7 +153,16 @@ public class ShootAction : BaseAction
                     continue;
                 }
 
-                validGridPositions.Add(validPosition);
+                Vector3 shootDir = targetUnit.transform.position - unit.transform.position;
+                float unitShoulderHeight = 1.5f;
+                if (Physics.Raycast(unit.transform.position + Vector3.up * unitShoulderHeight, shootDir,
+                     shootDir.magnitude, obstacleLayerMask))
+                {
+                    //장애물에 막힘
+                    continue;
+                }
+
+                validGridPositions.Add(testGridPosition);
             }
         }
         return validGridPositions;
@@ -147,7 +170,6 @@ public class ShootAction : BaseAction
 
     public override void TakeAction(GridPosition gridPosition, Action onActionComplete)
     {
-        ActionStart(onActionComplete);
 
         targetUnit = LevelGrid.Instance.GetUnitAtGridPosition(gridPosition);
 
@@ -157,7 +179,34 @@ public class ShootAction : BaseAction
         float aimingStateTime = 1f;
         stateTimer = aimingStateTime;
 
-        
+        ActionStart(onActionComplete);
+    }
+
+    public Unit GetTargetUnit()
+    {
+        return targetUnit;
+    }
+
+    public int GetMaxShootDistance()
+    {
+        return maxShootDistance;
+    }
+
+
+    public override EnemyAIAction GetEnemyAIAction(GridPosition gridPosition)
+    {
+        Unit targetUnit = LevelGrid.Instance.GetUnitAtGridPosition(gridPosition);
+        return new EnemyAIAction
+        {
+            gridPosition = gridPosition,
+            // 딸피 먼저 추적
+            actionValue = 100 + Mathf.RoundToInt((1- targetUnit.GetHealthNormalized()) * 100f) ,
+        };
+    }
+
+    public int GetTargetCountAtPosition(GridPosition gridPosition)
+    {
+        return GetValidGridPositionList(gridPosition).Count;
     }
 }
   

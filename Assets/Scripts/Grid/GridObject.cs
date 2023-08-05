@@ -3,10 +3,12 @@ using Unity.VisualScripting;
 
 public class GridObject
 {
-    private GridSystem gridSystem;
+    private GridSystem<GridObject> gridSystem;
     private GridPosition gridPosition;
     public List<Unit> unitList;
-    public GridObject(GridSystem gridSystem, GridPosition gridPosition)
+
+    public IInteractable Interactable { get; set; }
+    public GridObject(GridSystem<GridObject> gridSystem, GridPosition gridPosition)
     {
         this.gridSystem = gridSystem;
         this.gridPosition = gridPosition;
@@ -58,6 +60,5 @@ public class GridObject
             return null;
         }
     }
-
      
 }
